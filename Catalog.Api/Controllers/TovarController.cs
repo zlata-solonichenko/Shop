@@ -1,3 +1,4 @@
+using System.Net;
 using Catalog.Api.Dtos;
 using Catalog.Application.Dtos;
 using Catalog.Application.Interfaces;
@@ -27,11 +28,20 @@ public class TovarController : ControllerBase
 
     [HttpPost("new")]
     public async Task<IActionResult> CreateTovarAsync(
-        [FromBody] CreateTovarDto request, //CreateTovarRequest ??
+        [FromBody] CreateTovarRequest request, //CreateTovarRequest ??
         [FromServices] ICreateTovarUseCase useCase, 
         CancellationToken cancellationToken)
     {
-        var newTowar = await useCase.ExecuteAsync(request, cancellationToken);
+        var dto = new CreateTovarDto
+        {
+            Name = request.Name,
+            Category = request.Category,
+            Price = request.Price,
+            PriceCurrencyType = request.PriceCurrencyType,
+            Unit = request.Unit,
+            UnitType = request.UnitType
+        };
+        var newTowar = await useCase.ExecuteAsync(dto, cancellationToken);
 
         return Ok(new {id = newTowar});
     }
@@ -75,7 +85,8 @@ public class TovarController : ControllerBase
     }
     
     //пишет "успешно", но из бд не удаляет
-    [HttpDelete("delete")]
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteTovarAsync(
         [FromRoute] Guid id,
         [FromServices] IDeleteTovarUseCase useCase,
